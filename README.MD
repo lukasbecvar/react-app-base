@@ -24,8 +24,6 @@ Using ``scripts/build-electron.sh``, you can build a desktop application.
     * [Website](https://reactjs.org)
 * Tailwind CSS
     * [Website](https://tailwindcss.com)
-* TsParticles
-    * [Website](https://particles.js.org)
 
 ## License
 This software is licensed under the [MIT license](LICENSE).

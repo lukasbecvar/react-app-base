@@ -16,7 +16,7 @@ COPY . .
 # build production app
 RUN npm run build
 
-# build nginx image
+# build nginx image (production environment)
 FROM nginx:stable-alpine
 
 # remove default nginx index page

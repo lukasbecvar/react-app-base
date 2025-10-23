@@ -1,4 +1,4 @@
-# action to build and push docker image on release
+# action to build and push docker image to github
 name: Build and push Docker image on release
 
 on:

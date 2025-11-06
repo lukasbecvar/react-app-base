@@ -1,0 +1,74 @@
+name: Build & Attach archive on release
+
+on:
+  release:
+    types: [published]
+
+# enable github actions token write permissions
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Attach
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # install dependencies
+      - name: Install dependencies
+        run: npm install --loglevel=error
+
+      # build assets
+      - name: Build assets
+        run: npm run build
+
+      # create release asset archive without unnecessary files
+      - name: Create release archive
+        run: |
+          tar --warning=no-file-changed -czf ${{ github.event.repository.name }}-${{ github.ref_name }}-webapp.tar.gz \
+            ./dist || true
+
+      # upload release asset archive
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.event.repository.name }}-${{ github.ref_name }}-webapp.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # prep electron-builder cache
+      - name: Prep electron-builder cache
+        run: |
+          export ELECTRON_BUILDER_CACHE=/tmp/electron-builder-cache
+          mkdir -p "$ELECTRON_BUILDER_CACHE"
+          rm -rf "$ELECTRON_BUILDER_CACHE/appimage" || true
+        env:
+          ELECTRON_BUILDER_CACHE: /tmp/electron-builder-cache
+
+      # build electron app
+      - name: Build electron app (AppImage + Snap, no publish)
+        run: |
+          export ELECTRON_BUILDER_CACHE=/tmp/electron-builder-cache
+          npx electron-builder --linux AppImage snap -p never
+        env:
+          ELECTRON_BUILDER_CACHE: /tmp/electron-builder-cache
+          CI: true
+
+      # upload AppImage to release
+      - name: Upload AppImage to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # upload snap to release
+      - name: Upload snap to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.snap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
